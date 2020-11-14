@@ -15,7 +15,7 @@ import os
 #%%
 def loadDataset(TYPE):
     # Load config file
-    cfg = load_config_data("./agent_motion_config.yaml")
+    cfg = load_config_data("../cfg/agent_motion_config.yaml")
     print(cfg)
 
     '''
