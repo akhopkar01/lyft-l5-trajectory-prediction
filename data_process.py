@@ -1,26 +1,63 @@
+#%%
+from torch.utils.data import DataLoader
+from l5kit.configs import load_config_data
+from l5kit.data import LocalDataManager, ChunkedDataset
+from l5kit.dataset import AgentDataset, EgoDataset
+
+
 from l5kit.rasterization import build_rasterizer
 from l5kit.configs import load_config_data
-from l5kit.data import ChunkedDataset
-from l5kit.dataset import AgentDataset
+
+
 import numpy as np
+import os
 
-# Declare global variables
-zarr_dt = ChunkedDataset("/home/majoradi/Documents/l5_sample/sample.zarr")
-zarr_dt.open()
-AGENTS = zarr_dt.agents
-FRAMES = zarr_dt.frames
-SCENES = zarr_dt.scenes
-datasetSize = 5
-cols = ["frame_id", "object_id", "object_type", "posx", "posy", "posz", "velx", "vely", "length", "width", "height",
-        "heading"]
-dataset_dict = {}
-dataset_list = []
-for col in cols:
-    dataset_dict[col] = 0
+#%%
+def loadDataset(TYPE):
+    # Load config file
+    cfg = load_config_data("./agent_motion_config.yaml")
+    print(cfg)
 
+    '''
+    set env variable for data   (PATH to the main DATASET folder)
+    ../lyft-motion-prediction-autonomous-vehicles/
+        +-arial_map
+        --scenes
+            --sample.zarr
+            --test.zarr
+            --train.zarr
+            --validate.zarr
+        +-semantic_map
+        --meta.json
+    '''
+
+    os.environ["L5KIT_DATA_FOLDER"] = "/media/kartik/62A60BCB35EBD08A/lyft-motion-prediction-autonomous-vehicles"
+    dm = LocalDataManager(None)
+
+    '''
+    Load the dataset for training and validation.
+        For training:
+            TYPE: "train_data_loader" 
+        For validation:
+            TYPE: "val_data_loader"
+    '''
+
+    dt_cfg = cfg[TYPE]
+    rasterizer = build_rasterizer(cfg, dm)
+    dt_zarr = ChunkedDataset(dm.require(dt_cfg["key"])).open()
+    dt_dataset = AgentDataset(cfg, dt_zarr, rasterizer)
+    dt_dataloader = DataLoader(dt_dataset, shuffle=dt_cfg["shuffle"],
+                                            batch_size=dt_cfg["batch_size"],
+                                            num_workers=dt_cfg["num_workers"])
+
+    return dt_zarr, dt_dataset, dt_dataloader
+
+
+
+#%%
 
 # ADDING AGENT INFORMATION
-def addAgentInformation():
+def addAgentInformation(AGENTS, FRAMES, SCENES):
     for idx in range(datasetSize):
         dataset_dict["posx"], dataset_dict["posy"] = AGENTS[idx][0]
         dataset_dict["length"], dataset_dict["width"], dataset_dict["height"] = AGENTS[idx][1]
@@ -37,3 +74,61 @@ def addAgentInformation():
 # ADDING FRAME INFORMATION TO THE LIST
 def addFrameInformation():
     return dataset_list
+
+#%%
+'''
+Function to generate the Training Dataset
+'''
+def generateTrainDataset(train_zarr):
+
+    SCENES = train_zarr.scenes
+    FRAMES = train_zarr.frames
+    AGENTS = train_zarr.agents
+
+    # print("SCENES:\n",SCENES[0])
+    # print("FRAMES:\n",FRAMES[0])
+    print("AGENTS:\n",AGENTS[0])
+
+    train_dataset_list = addAgentInformation(AGENTS, FRAMES, SCENES)
+
+    print("Train dataset list:\n", train_dataset_list)
+
+
+'''
+Function to generate the Validation Dataset
+'''
+def generateValDataset(val_zarr):
+
+    AGENTS = val_zarr.agents
+    FRAMES = val_zarr.frames
+    SCENES = val_zarr.scenes
+
+    # print("SCENES:\n", SCENES[0])
+    # print("FRAMES:\n", FRAMES[0])
+    print("AGENTS:\n", AGENTS[0])
+
+    val_dataset_list = addAgentInformation(AGENTS, FRAMES, SCENES)
+
+#%%
+
+
+
+#%%
+
+if __name__ == '__main__':
+
+    datasetSize = 5
+    cols = ["frame_id", "object_id", "object_type", "posx", "posy", "posz", "velx", "vely", "length", "width", "height",
+            "heading"]
+    dataset_dict = {}
+    dataset_list = []
+    for col in cols:
+        dataset_dict[col] = 0
+
+    train_zarr, train_dataset, train_dataloader = loadDataset("train_data_loader")
+
+    val_zarr, val_dataset, val_dataloader = loadDataset("val_data_loader")
+
+    generateTrainDataset(train_zarr)
+
+
