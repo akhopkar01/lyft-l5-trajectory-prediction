@@ -5,13 +5,16 @@
 
 This is an experimental repository to implement the paper on [GRIP++](https://arxiv.org/pdf/1907.07792.pdf) by Xin Li, Xiaowen Ying, Mooi Choo Chuah and is not used for any commercial purpose. The implementation in this repository is done for [Lyft Level 5 dataset](https://arxiv.org/pdf/2006.14480.pdf) - the largest self-driving dataset available currently.
 
+![Implementation Workflow](https://github.com/akhopkar01/lyft-l5-trajectory-prediction/blob/master/media/Flow.png)
+
 ### Authors
 Aditya Khopkar
-Kartik Venkat
-Kushagra Agrawal
-Patan Sanaulla Khan
 
-![Implementation Workflow](https://github.com/akhopkar01/lyft-l5-trajectory-prediction/blob/master/media/Flow.png)
+Kartik Venkat
+
+Kushagra Agrawal
+
+Patan Sanaulla Khan
 
 ## Dataset
 Lyft Level 5 dataset consists of more than 1000+ hours of data with more than 170000 scenes. The dataset could be found on the [Lyft L5 Website](https://self-driving.lyft.com/level5/data/). It is encouraged to download the dataset.The dataset consists of the following structure:
